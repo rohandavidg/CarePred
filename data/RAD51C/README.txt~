@@ -1,0 +1,4 @@
+#downloaded the AF2 structure
+wget https://alphafold.ebi.ac.uk/files/AF-O43502-F1-model_v4.pdb .
+https://alphafold.ebi.ac.uk/files/AF-O43502-F1-model_v4.cif
+

@@ -1,0 +1,3 @@
+GENE='RAD51C'
+TRANSCRIPT='ENST00000337432'
+data_dir='data'
