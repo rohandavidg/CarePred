@@ -2,6 +2,9 @@ import pandas as pd
 import numpy as np
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
+from pdbecif.mmcif_io import CifFileReader
+from pdbecif.mmcif_tools import MMCIF2Dict
+import metapredict as meta
 
 
 def preprocess_dbNSFP(dbNSFP_df, gene, transcript):
@@ -29,9 +32,29 @@ def preprocess_dbNSFP(dbNSFP_df, gene, transcript):
 
 
 def preprocess_ss(pdb_name, pdb_path):
+    SS_MAP = {
+        'H': 'H',
+        'B': 'C',
+        'E': 'E',
+        'G': 'H',
+        'I': 'C',
+        'T': 'C',
+        'S': 'C',
+        '-': 'C',
+        '*': '*'}
+    dssp_header =  ["DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA', 
+           'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx', 
+           'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy']
     p = PDBParser()
     structure = p.get_structure(pdb_name, pdb_path)
     model = structure[0]
-    dssp =  DSSP(model, pdb_path)
-    return(dssp)
+    dssp =  DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
+   # dssp =  DSSP(model, pdb_path, dssp=dssp_path)
+    dssp_df = pd.DataFrame(dssp)
+    dssp_df.columns = dssp_header
+    dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
+    return(dssp_df)
+
+
+def parse_alphford(mmif_file):
     
