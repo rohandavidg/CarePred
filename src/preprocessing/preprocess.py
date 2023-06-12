@@ -43,30 +43,6 @@ def preprocess_dbNSFP(dbNSFP_df, gene, transcript):
     return dbNSFP_dedup_df
 
 
-def preprocess_ss(pdb_name, pdb_path):
-    SS_MAP = {
-        'H': 'H',
-        'B': 'C',
-        'E': 'E',
-        'G': 'H',
-        'I': 'C',
-        'T': 'C',
-        'S': 'C',
-        '-': 'C',
-        '*': '*'}
-    dssp_header =  ["DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA', 
-           'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx', 
-           'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy']
-    p = PDBParser()
-    structure = p.get_structure(pdb_name, pdb_path)
-    model = structure[0]
-    dssp =  DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
-   # dssp =  DSSP(model, pdb_path, dssp=dssp_path)
-    dssp_df = pd.DataFrame(dssp)
-    dssp_df.columns = dssp_header
-    dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
-    return(dssp_df)
-
 def map_input_labels(input_file, label_file, tmp_folder):
     label_df = pd.read_csv(label_file, header=None, sep='\t')
     header = ['mutations', 'Class']
@@ -114,36 +90,105 @@ class get_seq(object):
         return mut_seq
 
 
-def generate_fasta(reference, input_class_df, tmp_folder):
-    variant_disorder_dict= {}
-    fasta_sequences = SeqIO.parse(open(reference_fasta),'fasta')
-    seq = [str(fasta.seq) for fasta in  fasta_sequences][0]
-    mutations = input_class_df.mutations.tolist()
-    class_labels = input_class_df.Class.tolist()
-    mut_class_tup = zip(mutations, class_labels)
+def run(reference, input_class_df, tmp_folder):
+    variant_disorder_dict = {}
+    fasta_sequences = SeqIO.parse(open(reference_fasta), 'fasta')
+    seq = str(next(fasta_sequences).seq)
+    mutations = input_class_df['mutations'].tolist()
+    class_labels = input_class_df['Class'].tolist()
     ref_disorder = meta.predict_disorder(seq, normalized=True)
     ref_pLDDT = meta.predict_pLDDT(seq)
-    for mut, labels in mut_class_tup:
+    model = esm.pretrained.esmfold_v1().eval().cuda()
+    tup_mut_class = zip(mutations, class_labels)
+    for mut, labels in tqdm(tup_mut_class, desc='Processing items', unit='item'):
+        print(f"Processing item: {mut}")
         ref = mut[0]
         alt = mut[-1]
-        index = re.findall(r'\d+', mut)[0]
-        index = int(index) 
+        index = int(re.findall(r'\d+', mut)[0])
         gen_seq = get_seq(seq, ref, alt, index)
         mut_seq = gen_seq.generate_mutant()
-        if alt == 'X':
-            pass
-        else:
+        
+        if alt != 'X':
             mut_disorder = meta.predict_disorder(mut_seq, normalized=True)
             mut_pLDDT = meta.predict_pLDDT(mut_seq)
-            list_index = index -1
-            variant_disorder_dict[mut] = [{'mutant_disorder':mut_disorder[list_index], 
-                                          'reference_disorder':ref_disorder[list_index],
-                                          'mutant_plddt':mut_pLDDT[list_index],
-                                          'reference_plddt': ref_pLDDT[list_index]}]
-        header = ">" + str(index) + "|" + GENE + "_" + ref + str(index) + alt + "|" + str(labels)
-        filename =  tmp_folder + '/' + GENE + "_" + ref + str(index) + alt + ".fa"
+            with torch.no_grad():
+                output = model.infer_pdb(mut_seq)
+            
+            pdb_out = tmp_folder + '/pdb/' + mut + ".pdb"
+            with open(pdb_out, "w") as f:
+                f.write(output)
+            
+            struct = bsio.load_structure(pdb_out, extra_fields=["b_factor"])
+            b_factor_mean = struct.b_factor.mean()
+            list_index = index - 1
+            variant_disorder_dict[mut] = [{'ESMfold_b_factor': b_factor_mean,
+                                            'mutant_disorder': mut_disorder[list_index],
+                                            'reference_disorder': ref_disorder[list_index],
+                                            'mutant_plddt': mut_pLDDT[list_index],
+                                            'reference_plddt': ref_pLDDT[list_index]}]
+        
+        header = f">{index}|{GENE}_{ref}{index}{alt}|{labels}"
+        filename = f"{tmp_folder}/fasta/{GENE}_{ref}{index}{alt}.fa"
+        
         with open(filename, 'w+') as fout:
-            fout.write(header)
+            fout.write(f"{header}\n")
             fout.write(gen_seq.generate_mutant())
+    
     return variant_disorder_dict
 
+
+def extract_dssp(pdb_name, pdb_path, index, class_type):
+    SS_MAP = {
+        'H': 'H',
+        'B': 'C',
+        'E': 'S',
+        'G': 'H',
+        'I': 'C',
+        'T': 'C',
+        'S': 'C',
+        '-': 'C',
+        '*': '*'}
+    dssp_header = ["DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA',
+                   'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx',
+                   'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy']
+    p = PDBParser()
+    structure = p.get_structure(pdb_name, pdb_path)
+    model = structure[0]
+    dssp = DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
+    dssp_df = pd.DataFrame(dssp, columns=dssp_header)
+    dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
+    dssp_df = dssp_df[dssp_df['DSSP_index'] == index]
+    cols_to_keep = ['Secondary_structure', 'Relative_ASA', 'NH–>O_1_energy',
+                    'O–>NH_1_energy', 'NH–>O_2_energy', 'O–>NH_2_energy']
+    dssp_df = dssp_df[cols_to_keep]
+    dssp_dict = dssp_df.to_dict(orient='records')
+    updated_dict = []
+    key_mapping = {
+        'Secondary_structure': class_type + "_Secondary_structure",
+        'Relative_ASA': class_type + "_Relative_ASA",
+        'NH–>O_1_energy': class_type + "_NH–>O_1_energy",
+        'O–>NH_1_energy': class_type + "_O–>NH_1_energy",
+        'NH–>O_2_energy': class_type + "_NH–>O_2_energy",
+        'O–>NH_2_energy': class_type + "_O–>NH_2_energy"
+    }
+    for d in dssp_dict:
+        updated_d = {key_mapping.get(key, key): value for key, value in d.items()}
+        updated_dict.append(updated_d)
+    return updated_dict
+
+def process_ss(input_class_df, tmp_pdb_dir, ref_pdb_name, reference_pdb, data_dict):
+    mutation_list = input_class_df.mutations.tolist()
+    for mut in mutation_list:
+        pdb_name = mut +".pdb"
+        mut_pdb = tmp_pdb_dir + "/"+ pdb_name
+        assert os.path.isfile(mut_pdb)
+        index = int(re.findall(r'\d+', mut)[0])
+        mut_dssp = extract_dssp(pdb_name, mut_pdb, index, 'mutant')
+        ref_dssp = extract_dssp(ref_pdb_name, reference_pdb, index, 'reference')
+        dssp_list = [mut_dssp + ref_dssp]
+        #print(dssp_list)
+        combined_dict = reduce(lambda x, y: {**x, **y}, dssp_list)
+        values = data_dict[mut] + combined_dict
+        combined_dict = reduce(lambda x, y: {**x, **y}, values)
+        data_dict[mut] = combined_dict
+        return data_dict
