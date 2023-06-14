@@ -21,3 +21,27 @@ def mkdir(directory):
         if not os.path.exists(folder):
             print('creating folder: %s'%folder)
             os.mkdir(folder)
+
+def remove_files_in_dir(directory):
+    files = os.listdir(directory)
+    for file in files:
+        file_path = os.path.join(directory, file)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            
+def remove_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+
+def cat_files(output_file, folder_path):
+    remove_file(output_file)
+    with open(output_file, 'a') as output:
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                with open(file_path, 'r') as file:
+                    shutil.copyfileobj(file, output)
+    return output_file
+
+

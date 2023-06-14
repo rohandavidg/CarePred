@@ -90,53 +90,6 @@ class get_seq(object):
         return mut_seq
 
 
-def run(reference, input_class_df, tmp_folder):
-    variant_disorder_dict = {}
-    fasta_sequences = SeqIO.parse(open(reference_fasta), 'fasta')
-    seq = str(next(fasta_sequences).seq)
-    mutations = input_class_df['mutations'].tolist()
-    class_labels = input_class_df['Class'].tolist()
-    ref_disorder = meta.predict_disorder(seq, normalized=True)
-    ref_pLDDT = meta.predict_pLDDT(seq)
-    model = esm.pretrained.esmfold_v1().eval().cuda()
-    tup_mut_class = zip(mutations, class_labels)
-    for mut, labels in tqdm(tup_mut_class, desc='Processing items', unit='item'):
-        print(f"Processing item: {mut}")
-        ref = mut[0]
-        alt = mut[-1]
-        index = int(re.findall(r'\d+', mut)[0])
-        gen_seq = get_seq(seq, ref, alt, index)
-        mut_seq = gen_seq.generate_mutant()
-        
-        if alt != 'X':
-            mut_disorder = meta.predict_disorder(mut_seq, normalized=True)
-            mut_pLDDT = meta.predict_pLDDT(mut_seq)
-            with torch.no_grad():
-                output = model.infer_pdb(mut_seq)
-            
-            pdb_out = tmp_folder + '/pdb/' + mut + ".pdb"
-            with open(pdb_out, "w") as f:
-                f.write(output)
-            
-            struct = bsio.load_structure(pdb_out, extra_fields=["b_factor"])
-            b_factor_mean = struct.b_factor.mean()
-            list_index = index - 1
-            variant_disorder_dict[mut] = [{'ESMfold_b_factor': b_factor_mean,
-                                            'mutant_disorder': mut_disorder[list_index],
-                                            'reference_disorder': ref_disorder[list_index],
-                                            'mutant_plddt': mut_pLDDT[list_index],
-                                            'reference_plddt': ref_pLDDT[list_index]}]
-        
-        header = f">{index}|{GENE}_{ref}{index}{alt}|{labels}"
-        filename = f"{tmp_folder}/fasta/{GENE}_{ref}{index}{alt}.fa"
-        
-        with open(filename, 'w+') as fout:
-            fout.write(f"{header}\n")
-            fout.write(gen_seq.generate_mutant())
-    
-    return variant_disorder_dict
-
-
 def extract_dssp(pdb_name, pdb_path, index, class_type):
     SS_MAP = {
         'H': 'H',
@@ -192,3 +145,122 @@ def process_ss(input_class_df, tmp_pdb_dir, ref_pdb_name, reference_pdb, data_di
         combined_dict = reduce(lambda x, y: {**x, **y}, values)
         data_dict[mut] = combined_dict
         return data_dict
+
+    
+def pdb_extract(reference, input_class_df, tmp_folder):
+    variant_disorder_dict = {}
+    fasta_sequences = SeqIO.parse(open(reference_fasta), 'fasta')
+    seq = str(next(fasta_sequences).seq)
+    mutations = input_class_df['mutations'].tolist()
+    class_labels = input_class_df['Class'].tolist()
+    ref_disorder = meta.predict_disorder(seq, normalized=True)
+    ref_pLDDT = meta.predict_pLDDT(seq)
+    model = esm.pretrained.esmfold_v1().eval().cuda()
+    tup_mut_class = zip(mutations, class_labels)
+    for mut, labels in tqdm(tup_mut_class, desc='Processing items', unit='mut'):
+        print(f"Processing item: {mut}")
+        ref = mut[0]
+        alt = mut[-1]
+        index = int(re.findall(r'\d+', mut)[0])
+        gen_seq = get_seq(seq, ref, alt, index)
+        mut_seq = gen_seq.generate_mutant()
+        
+        if alt != 'X':
+            mut_disorder = meta.predict_disorder(mut_seq, normalized=True)
+            mut_pLDDT = meta.predict_pLDDT(mut_seq)
+            with torch.no_grad():
+                output = model.infer_pdb(mut_seq)
+            
+            pdb_out = tmp_folder + '/pdb/' + mut + ".pdb"
+            with open(pdb_out, "w") as f:
+                f.write(output)
+            
+            struct = bsio.load_structure(pdb_out, extra_fields=["b_factor"])
+            b_factor_mean = struct.b_factor.mean()
+            list_index = index - 1
+            variant_disorder_dict[mut] = [{'ESMfold_b_factor': b_factor_mean,
+                                            'mutant_disorder': mut_disorder[list_index],
+                                            'reference_disorder': ref_disorder[list_index],
+                                            'mutant_plddt': mut_pLDDT[list_index],
+                                            'reference_plddt': ref_pLDDT[list_index]}]
+            
+    
+        
+        header = f">{index}|{GENE}_{ref}{index}{alt}|{labels}"
+        filename = f"{tmp_folder}/fasta/{GENE}_{ref}{index}{alt}.fa"
+        
+        with open(filename, 'w+') as fout:
+            fout.write(f"{header}\n")
+            fout.write(gen_seq.generate_mutant() + '\n')
+    #variant_disorder_df = pd.DataFrame.from_dict(variant_disorder_dict, orient='index').reset_index()
+    #variant_disorder_df.columns = ['mutation', 'ESMfold_b_factor', 'mutant_disorder', 'reference_disorder', 'mutant_plddt', 'reference_plddt']
+    return variant_disorder_dict
+
+
+def run_foldx(input_class_df, ref_pdb_path, ref_pdb_name):
+    mutations = input_class_df.mutations.tolist()
+    foldx_mutations = [i[:1]+'A' +i[1:] +";" for i in mutations]
+    #print(foldx_mutations)
+    st=Structure(ref_pdb_name, path=ref_pdb_path)
+    stRepaired = st.repair()
+    foldx_df = pd.DataFrame()
+    for x in tqdm(foldx_mutations, desc='Processing items', unit='x'):
+        energies, mutEnsemble, wtEnsemble = stRepaired.mutate(x,number_of_runs=5)
+        energies = energies.reset_index()
+        foldx_df = pd.concat([foldx_df, energies])
+    return foldx_df
+
+
+def parse_eve_file(eve_input):
+    df = pd.read_csv(eve_input)
+    #print(df.columns)
+    df['mutations'] = df['wt_aa'] + df['position'].astype('str') + df['mt_aa']
+    cols_to_select = ['mutations', 'EVE_scores_ASM', 'uncertainty_ASM']
+    df = df[cols_to_select]
+    df = df[~df['EVE_scores_ASM'].isna()]
+    return df
+
+
+def cat_files(output_file, folder_path):
+    remove_file(output_file)
+    with open(output_file, 'a') as output:
+        for filename in os.listdir(folder_path):
+            file_path = os.path.join(folder_path, filename)
+            if os.path.isfile(file_path):
+                with open(file_path, 'r') as file:
+                    shutil.copyfileobj(file, output)
+    return output_file
+
+def generate_esm_embeddings(esm_extract, model, fasta_file, folder_path, output_dir):
+    fasta_file = cat_files(fasta_file, folder_path)
+    remove_files_in_dir(output_dir)
+    command = [PYTHON, esm_extract, model, fasta_file, output_dir, '--repr_layers', '0', '32', '33',
+               '--include',  'mean']
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode == 0:
+        print(result.stdout)
+    else:
+        print(result.stderr)
+        
+def emb_to_dataframe(esm_extract, model, result_fasta, fasta_tmp_folder, emb_tmp_folder, EMB_LAYER):
+    ys = []
+    Xs = []
+    mutations = []
+    labels = []
+    generate_esm_embeddings(esm_extract, model, result_fasta, fasta_tmp_folder, emb_tmp_folder)
+    variant_tensor_dict = {}
+    for header, _seq in esm.data.read_fasta(result_fasta):
+        scaled_effect = header.split('|')[-1]
+        mutation = header.split('|')[-2].split("_")[1]
+        key = mutation + "_" + scaled_effect
+        mutations.append(mutation)
+        ys.append(float(scaled_effect))
+        fn = f'{emb_tmp_folder}/{header}.pt'
+        embs = torch.load(fn)
+        variant_tensor_dict[key] = np.array(embs['mean_representations'][EMB_LAYER])
+        Xs.append(embs['mean_representations'][EMB_LAYER])
+    Xs = torch.stack(Xs, dim=0).numpy()
+    Xs_df = pd.DataFrame(Xs)
+    Xs_df['mutations'] = mutations
+    Xs_df['labels'] = ys
+    return Xs_df
