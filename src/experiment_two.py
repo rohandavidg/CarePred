@@ -10,7 +10,7 @@ import numpy as np
 import biographs as bg
 from collections import defaultdict
 
-dssp_path = '/research/bsi/tools/biotools/hssp/3.1.5/bin/mkhssp'
+dssp_path = '/research/bsi/tools/biotools/dssp/2.3.0/bin/mkdssp'
 
 
 def three_to_one(aa_three):
@@ -49,6 +49,7 @@ def extract_plddt(pdb, pdb_file, chainid, offset=None):
     return df
 
 def extract_dssp(pdb_name, pdb_path):
+    # Secondary structure mapping
     SS_MAP = {
         'H': 'H',
         'B': 'C',
@@ -58,20 +59,25 @@ def extract_dssp(pdb_name, pdb_path):
         'T': 'C',
         'S': 'C',
         '-': 'C',
-        '*': '*'}
-    dssp_header = ["DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA',
-                   'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx',
-                   'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy']
+        '*': '*'
+    }
+    dssp_header = [
+        "DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA',
+        'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx',
+        'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy'
+    ]
     p = PDBParser()
     structure = p.get_structure(pdb_name, pdb_path)
     model = structure[0]
     dssp = DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
     dssp_df = pd.DataFrame(dssp, columns=dssp_header)
     dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
-    cols_to_keep = ['Secondary_structure', 'Relative_ASA', 'NH–>O_1_energy',
-                    'O–>NH_1_energy', 'NH–>O_2_energy', 'O–>NH_2_energy']
+    cols_to_keep = [
+        'Secondary_structure', 'Relative_ASA', 'NH–>O_1_energy',
+        'O–>NH_1_energy', 'NH–>O_2_energy', 'O–>NH_2_energy'
+    ]
     dssp_df = dssp_df[cols_to_keep]
-    print(dssp_df)
+    return dssp_df
 
 
 def compute_distance_average(pdb,chain, group, window_size, cutoff, offset=None):
@@ -154,13 +160,11 @@ def calculate_AA_distance(structure1_path, structure2_path, chain):
         mean_distance = np.mean(distances)
         aa_distance_dict[k] = mean_distance
     df = pd.DataFrame.from_dict(aa_distance_dict, orient='index', columns=['Mean_Distance'])
-    #print(df)
-    df = df.reset_index()
+     df = df.reset_index()
     df[['crystal_residue', 'crystal_pos', 'crystal_chain', 'AF2_residue', 'AF2_position', "AF2_chain"]] = df['index'].str.split('_', expand=True)
     df['crystal_residue'] =  df['crystal_residue'].apply(lambda x: three_to_one(x))
     df['AF2_residue'] =  df['AF2_residue'].apply(lambda x: three_to_one(x))
     df = df[df['crystal_chain'] == chain]
-    #df['group'] = group
     df['REF_POS'] = df['crystal_residue'] + df['crystal_pos'].astype('str')
     df = df[['REF_POS', 'Mean_Distance']]
     return df
@@ -206,7 +210,7 @@ def extract_BRCA1_features():
                                                  on='REF_POS', how='outer')
     BRCA1_1JNX_plddt_local_residue_df = BRCA1_1JNX_plddt_local_residue_df[~BRCA1_1JNX_plddt_local_residue_df['PLDDT'].isna()]
     BRCA1_1JNX_plddt_local_residue_df['GENE'] = "BRCA1"
-    BRCA1_1JNX_plddt_local_residue_df.to_csv('BRCA1_1JNX_plddt_distance.csv', sep='\t', index=None)
+#    BRCA1_1JNX_plddt_local_residue_df.to_csv('BRCA1_1JNX_plddt_distance.csv', sep='\t', index=None)
 
 def extract_BRCA2_features():
     BRCA2_1MJE_crystal_complex = pdb_constants.BRCA2_1MJE_pdb
@@ -273,6 +277,8 @@ def extract_PALB2_features():
                                                  on='REF_POS', how='outer')
     PALB2_2W18_plddt_local_residue_df = PALB2_2W18_plddt_local_residue_df[~PALB2_2W18_plddt_local_residue_df['PLDDT'].isna()]
     PALB2_2W18_plddt_local_residue_df['GENE'] = 'PALB2'
+#    PALB2_2W18_dssp = extract_dssp('2W18', PALB2_2W18_AF2_complex)
+#    print(PALB2_2W18_dssp)
     PALB2_2W18_plddt_local_residue_df.to_csv('PALB2_2W18_plddt_distance.csv', sep='\t', index=None)
     
     

@@ -371,16 +371,19 @@ def main():
     BRCA1_data_df = BRCA1_ddg_results()
     BRCA1_function_df =  parse_BRCA1_function(BRCA1_functional_data)
     BRCA1_data_function_df = pd.merge(BRCA1_data_df, BRCA1_function_df, on='mutations', how='left')
+    BRCA1_data_function_df.to_csv("BRCA1_data_function_ddg.csv", index=None)
     BRCA2_data_df = BRCA2_ddg_results()
     BRCA2_function_df = parse_BRCA2_function(BRCA2_functional_data)
     BRCA2_data_function_df = pd.merge(BRCA2_data_df, BRCA2_function_df, on='mutations', how='left')
+    BRCA2_data_function_df.to_csv("BRCA2_data_function_ddg.csv", index=None)
     PALB2_data_df = PALB2_ddg_results()
-    PALB2_function_df = parse_PALB2_function(PALB2_functional_data)
+    PALB2_function_df = parse_PALB2_function(PALB2_functional_data)    
     PALB2_data_function_df = pd.merge(PALB2_data_df, PALB2_function_df, on='mutations', how='left')
+    PALB2_data_function_df.to_csv("PALB2_data_function_ddg.csv", index=None)
     RAD51C_data_df = RAD51C_ddg_results()    
     RAD51C_function_df = parse_RAD51C_function(RAD51C_functional_data)
     RAD51C_data_function_df = pd.merge(RAD51C_data_df, RAD51C_function_df, on='mutations', how='left')
-
+    RAD51C_data_function_df.to_csv("RAD51C_data_function_ddg.csv", index=None)
     
 if __name__ == "__main__":
     main()
