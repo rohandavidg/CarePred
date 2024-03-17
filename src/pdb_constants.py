@@ -193,7 +193,7 @@ PALB2_2W18_ESM_pdb5 = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s12
 ##BRCA2
 BRCA2_1IYJ_pdb = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1IYJ/1IYJ.pdb"
 BRCA2_1IYJ_subunit_pdb = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1IYJ/BRCA2_1IYJ_crystal_subunit_chainB.pdb"
-BRCA2_1MJE_pdb = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1MJE/1MJE.pdb"
+BRCA2_1MJE_pdb = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1MJE/1MJE_fixed_copy.pdb"
 BRCA2_1MJE_subunit_pdb = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1MJE/BRCA2_1MJE_crystal_subunit.pdb"
 
 #Alphafold2
