@@ -1,6 +1,8 @@
+#!/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/python_virtual/bin/python
 from Bio.PDB import PDBParser, PDBIO
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
 import warnings
+import argparse
 
 def fix_pdb(input_pdb_file, output_pdb_file):
     # Suppress PDB construction warnings
@@ -21,7 +23,15 @@ def fix_pdb(input_pdb_file, output_pdb_file):
         io.set_structure(structure)
         io.save(output_pdb_file)
 
-# Example usage
-input_pdb_file = '/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis//BRCA2/crystal/1MJE/1MJE.pdb'
-output_pdb_file = 'output.pdb'
-fix_pdb(input_pdb_file, output_pdb_file)
+
+if __name__ ==  '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-i', dest='input_pdb_file', required=True,
+                        help="input pdb")
+    parser.add_argument('-o', dest='output_pdb_file',
+                        help="output pdb", required=True)
+    args = parser.parse_args()
+    fix_pdb(args.input_pdb_file, args.output_pdb_file)
+        
+

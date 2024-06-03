@@ -1,6 +1,7 @@
 from Bio.PDB import PDBParser
 from Bio.PDB import Superimposer
 from Bio import PDB
+from collections import OrderedDict
 from Bio.PDB.DSSP import DSSP
 from pdbecif.mmcif_io import CifFileReader
 from pdbecif.mmcif_tools import MMCIF2Dict
@@ -48,7 +49,7 @@ def extract_plddt(pdb, pdb_file, chainid, offset=None):
     df.columns = ['REF_POS', 'PLDDT']
     return df
 
-def extract_dssp(pdb_name, pdb_path):
+def extract_dssp(pdb_name, pdb_path, chain, offset=False):
     # Secondary structure mapping
     SS_MAP = {
         'H': 'H',
@@ -62,23 +63,27 @@ def extract_dssp(pdb_name, pdb_path):
         '*': '*'
     }
     dssp_header = [
-        "DSSP_index", "Amino_acid", 'Secondary_structure', 'Relative_ASA',
+        "position", "Amino_acid", 'Secondary_structure', 'Relative_ASA',
         'Phi', 'Psi', 'NH–>O_1_relidx', 'NH–>O_1_energy', 'O–>NH_1_relidx',
         'O–>NH_1_energy', 'NH–>O_2_relidx', 'NH–>O_2_energy', 'O–>NH_2_relidx', 'O–>NH_2_energy'
     ]
     p = PDBParser()
     structure = p.get_structure(pdb_name, pdb_path)
     model = structure[0]
-    dssp = DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
-    dssp_df = pd.DataFrame(dssp, columns=dssp_header)
-    dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
-    cols_to_keep = [
-        'Secondary_structure', 'Relative_ASA', 'NH–>O_1_energy',
-        'O–>NH_1_energy', 'NH–>O_2_energy', 'O–>NH_2_energy'
-    ]
-    dssp_df = dssp_df[cols_to_keep]
-    return dssp_df
 
+    dssp_data = []
+    for chain_obj in model:
+        if chain_obj.id == chain:
+            dssp = DSSP(model, pdb_path, dssp=dssp_path, acc_array="Miller")
+            dssp_data.extend(dssp)
+            break
+        
+    dssp_df = pd.DataFrame(dssp_data, columns=dssp_header)
+    dssp_df['Secondary_structure'] = dssp_df['Secondary_structure'].map(SS_MAP)
+    cols_to_keep = ['Amino_acid','Secondary_structure', 'Relative_ASA']
+    dssp_df = dssp_df[cols_to_keep]
+    dssp_df = dssp_df[['Amino_acid', 'Secondary_structure','Relative_ASA']]
+    return dssp_df
 
 def compute_distance_average(pdb,chain, group, window_size, cutoff, offset=None):
     parser = PDBParser(QUIET=True)
@@ -160,7 +165,7 @@ def calculate_AA_distance(structure1_path, structure2_path, chain):
         mean_distance = np.mean(distances)
         aa_distance_dict[k] = mean_distance
     df = pd.DataFrame.from_dict(aa_distance_dict, orient='index', columns=['Mean_Distance'])
-     df = df.reset_index()
+    df = df.reset_index()
     df[['crystal_residue', 'crystal_pos', 'crystal_chain', 'AF2_residue', 'AF2_position', "AF2_chain"]] = df['index'].str.split('_', expand=True)
     df['crystal_residue'] =  df['crystal_residue'].apply(lambda x: three_to_one(x))
     df['AF2_residue'] =  df['AF2_residue'].apply(lambda x: three_to_one(x))
@@ -174,6 +179,8 @@ def extract_BRCA1_features():
     BRCA1_4OFB_crystal_complex = pdb_constants.BRCA1_4OFB_pdb
     BRCA1_4OFB_AF2_complex = pdb_constants.BRCA1_4OFB_AF_pdb1
     BRCA1_4OFB_plddt_df = extract_plddt('4OFB', BRCA1_4OFB_AF2_complex, 'A', 1648)
+    BRCA1_4OFB_dssp_df = extract_dssp('4OFB', BRCA1_4OFB_AF2_complex, 'A')
+    BRCA1_4OFB_plddt_df = BRCA1_4OFB_plddt_df.merge(BRCA1_4OFB_dssp_df, left_index=True, right_index=True)
     BRCA1_4OFB_local_distance_df = compute_local_distance(BRCA1_4OFB_crystal_complex,
                                                     BRCA1_4OFB_AF2_complex,
                                                     'A', 'A', '4OFB', 1648)    
@@ -187,6 +194,8 @@ def extract_BRCA1_features():
     BRCA1_7LYB_crystal_complex = pdb_constants.BRCA1_7LYB_pdb
     BRCA1_7LYB_AF2_complex = pdb_constants.BRCA1_7LYB_AF_pdb1
     BRCA1_7LYB_plddt_df = extract_plddt('7LYB', BRCA1_7LYB_AF2_complex, 'I', 3)
+    BRCA1_7LYB_dssp_df = extract_dssp('7LYB', BRCA1_7LYB_AF2_complex, 'I')
+    BRCA1_7LYB_plddt_df = BRCA1_7LYB_plddt_df.merge(BRCA1_7LYB_dssp_df, left_index=True, right_index=True)
     BRCA1_7LYB_local_distance_df = compute_local_distance(BRCA1_7LYB_crystal_complex,
                                                           BRCA1_7LYB_AF2_complex,
                                                           'M', 'I', '7LYB', 3)    
@@ -201,6 +210,8 @@ def extract_BRCA1_features():
     BRCA1_1JNX_crystal_complex = pdb_constants.BRCA1_1JNX_pdb
     BRCA1_1JNX_AF2_complex = pdb_constants.BRCA1_1JNX_AF_pdb1
     BRCA1_1JNX_plddt_df = extract_plddt('1JNX', BRCA1_1JNX_AF2_complex, 'A', 1648)
+    BRCA1_1JNX_dssp_df = extract_dssp('1JNX', BRCA1_1JNX_AF2_complex, 'A')
+    BRCA1_1JNX_plddt_df = BRCA1_1JNX_plddt_df.merge(BRCA1_1JNX_dssp_df, left_index=True, right_index=True)
     BRCA1_1JNX_local_distance_df = compute_local_distance(BRCA1_1JNX_crystal_complex,
                                                           BRCA1_1JNX_AF2_complex,
                                                           'X', 'A', '1JNX', 1648)
@@ -210,12 +221,14 @@ def extract_BRCA1_features():
                                                  on='REF_POS', how='outer')
     BRCA1_1JNX_plddt_local_residue_df = BRCA1_1JNX_plddt_local_residue_df[~BRCA1_1JNX_plddt_local_residue_df['PLDDT'].isna()]
     BRCA1_1JNX_plddt_local_residue_df['GENE'] = "BRCA1"
-#    BRCA1_1JNX_plddt_local_residue_df.to_csv('BRCA1_1JNX_plddt_distance.csv', sep='\t', index=None)
+    BRCA1_1JNX_plddt_local_residue_df.to_csv('BRCA1_1JNX_plddt_distance.csv', sep='\t', index=None)
 
 def extract_BRCA2_features():
     BRCA2_1MJE_crystal_complex = pdb_constants.BRCA2_1MJE_pdb
     BRCA2_1MJE_AF2_complex = pdb_constants.BRCA2_1MJE_AF2_pdb1
     BRCA2_1MJE_plddt_df = extract_plddt('1MJE', BRCA2_1MJE_AF2_complex, 'A', 2398)
+    BRCA2_1MJE_dssp_df = extract_dssp('1MJE', BRCA2_1MJE_AF2_complex, 'A')
+    BRCA2_1MJE_plddt_df = BRCA2_1MJE_plddt_df.merge(BRCA2_1MJE_dssp_df, left_index=True, right_index=True)
     BRCA2_1MJE_local_distance_df = compute_local_distance(BRCA2_1MJE_crystal_complex,
                                                           BRCA2_1MJE_AF2_complex,
                                                           'A', 'A', '1MJE', 2398)
@@ -232,6 +245,8 @@ def extract_RAD51C_features():
     RAD51C_8FAZ_crystal_complex = pdb_constants.RAD51C_8FAZ_pdb
     RAD51C_8FAZ_AF2_complex = pdb_constants.RAD51C_8FAZ_AF_pdb1
     RAD51C_8FAZ_plddt_df = extract_plddt('8FAZ', RAD51C_8FAZ_AF2_complex, 'B', 9)
+    RAD51C_8FAZ_dssp_df = extract_dssp('8FAZ', RAD51C_8FAZ_AF2_complex, 'B')
+    RAD51C_8FAZ_plddt_df = RAD51C_8FAZ_plddt_df.merge(RAD51C_8FAZ_dssp_df, left_index=True, right_index=True)
     RAD51C_8FAZ_local_distance_df = compute_local_distance(RAD51C_8FAZ_crystal_complex,
                                                           RAD51C_8FAZ_AF2_complex,
                                                            'C', 'B', '8FAZ',9)
@@ -248,7 +263,9 @@ def extract_RAD51C_features():
 def extract_PALB2_features():
     PALB2_3EU7_crystal_complex = pdb_constants.PALB2_3EU7_pdb
     PALB2_3EU7_AF2_complex = pdb_constants.PALB2_3EU7_AF2_pdb1
-    PALB2_3EU7_plddt_df = extract_plddt('8FAZ', PALB2_3EU7_AF2_complex, 'A', 853)
+    PALB2_3EU7_plddt_df = extract_plddt('3EU7', PALB2_3EU7_AF2_complex, 'A', 853)
+    PALB2_3EU7_dssp_df = extract_dssp('3EU7', PALB2_3EU7_AF2_complex, 'A')    
+    PALB2_3EU7_plddt_df = PALB2_3EU7_plddt_df.merge(PALB2_3EU7_dssp_df, left_index=True, right_index=True)    
     PALB2_3EU7_local_distance_df = compute_local_distance(PALB2_3EU7_crystal_complex,
                                                           PALB2_3EU7_AF2_complex,
                                                            'A', 'A', '3EU7',853)
@@ -265,7 +282,9 @@ def extract_PALB2_features():
     
     PALB2_2W18_crystal_complex = pdb_constants.PALB2_2W18_pdb
     PALB2_2W18_AF2_complex = pdb_constants.PALB2_2W18_AF2_pdb1
-    PALB2_2W18_plddt_df = extract_plddt('8FAZ', PALB2_2W18_AF2_complex, 'A', 853)
+    PALB2_2W18_plddt_df = extract_plddt('2W18', PALB2_2W18_AF2_complex, 'A', 853)
+    PALB2_2W18_dssp_df = extract_dssp('2W18', PALB2_2W18_AF2_complex, 'A')    
+    PALB2_2W18_plddt_df = PALB2_2W18_plddt_df.merge(PALB2_2W18_dssp_df, left_index=True, right_index=True)
     PALB2_2W18_local_distance_df = compute_local_distance(PALB2_2W18_crystal_complex,
                                                           PALB2_2W18_AF2_complex,
                                                            'A', 'A', '2W18',853)
@@ -277,16 +296,14 @@ def extract_PALB2_features():
                                                  on='REF_POS', how='outer')
     PALB2_2W18_plddt_local_residue_df = PALB2_2W18_plddt_local_residue_df[~PALB2_2W18_plddt_local_residue_df['PLDDT'].isna()]
     PALB2_2W18_plddt_local_residue_df['GENE'] = 'PALB2'
-#    PALB2_2W18_dssp = extract_dssp('2W18', PALB2_2W18_AF2_complex)
-#    print(PALB2_2W18_dssp)
     PALB2_2W18_plddt_local_residue_df.to_csv('PALB2_2W18_plddt_distance.csv', sep='\t', index=None)
     
     
 def main():
     extract_BRCA1_features()
-    extract_BRCA2_features()
-    extract_RAD51C_features()
-    extract_PALB2_features()
+#    extract_BRCA2_features()
+#    extract_RAD51C_features()
+#    extract_PALB2_features()
     
 
 if __name__ == "__main__":
