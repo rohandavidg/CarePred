@@ -14,7 +14,24 @@ Generative AI impact on protein stability prediction in breast cancer genes \
 Rohan Gnanaolivu, Steven Hart \
 bioRxiv 2024.06.03.597089; doi: https://doi.org/10.1101/2024.06.03.597089
 
-## 3. CODE
+
+## 3. PREPROCESSING
+
+Data used: dbNSFP 4.7 (https://dbnsfp.s3.amazonaws.com/dbNSFP4.7a.zip) \
+Function data: Data folder
+
+### ESMFOLD structures: src/code/create_esmfold.py \
+python script used to create ESMFold structures
+
+### AlphaFold2 mutimer structures were created using ColabFold v1.5.5
+
+### FoldX 5.0 was installed from (https://foldxsuite.crg.eu/products#foldx) and pyFoldX was used with the script in src/code/run_foldx.py to create stability prediction
+
+### Rosetta prediction were created using the script in src/code/rosetta_ddg.py
+
+### DDGun3d prediction were created using the script in src/code/run_ddgun3d.py
+
+## 4. ANALYSIS
 
 ** Experiment_zero.ipynb
 

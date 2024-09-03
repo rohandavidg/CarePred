@@ -1,5 +1,3 @@
-#!/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/python_virtual/bin/python
-
 from pyrosetta import init
 from pyrosetta import pose_from_pdb
 from pyrosetta.rosetta.protocols import ddg
@@ -153,6 +151,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     ddg_dict = run_ddg(args.pdb, args.pos, args.target_chain)
     df = pd.DataFrame(list(ddg_dict.items()), columns=['Mutation', 'ΔΔG (kJ/mol)'])
-#    print(df)
     filename = args.outfile
     df.to_csv(filename, index=False)

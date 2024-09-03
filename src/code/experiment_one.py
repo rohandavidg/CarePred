@@ -68,7 +68,6 @@ import biographs as bg
 from scipy.stats import spearmanr
 import sys
 from Bio.PDB.DSSP import DSSP
-dssp_path = "/home/rohan/rohan/ESM/dssp/xssp-3.0.10/mkdssp"
 os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "garbage_collection_threshold:0.6,max_split_size_mb:412"
 import torch
 from sklearn.metrics import roc_auc_score, average_precision_score
@@ -83,6 +82,8 @@ from sklearn.preprocessing import MinMaxScaler
 import ddg_constants
 import dbnsfp_constants
 
+
+#PATH TO DATA
 BRCA1_functional_data = ddg_constants.BRCA1_functional_data
 BRCA2_functional_data = ddg_constants.BRCA2_function
 PALB2_functional_data = ddg_constants.PALB2_function

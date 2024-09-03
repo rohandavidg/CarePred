@@ -11,8 +11,6 @@ import numpy as np
 import biographs as bg
 from collections import defaultdict
 
-dssp_path = '/research/bsi/tools/biotools/dssp/2.3.0/bin/mkdssp'
-
 
 def three_to_one(aa_three):
     amino_acids = {
@@ -35,7 +33,6 @@ def extract_plddt(pdb, pdb_file, chainid, offset=None):
     for chain in model:
         for residue in chain:
             if chain.id == chainid:
-            # Assuming PLDDT scores are stored in the B-factor column
                 plddt_score = residue["CA"].get_bfactor() 
                 if offset:
                     pos = residue.id[1] + offset
@@ -50,7 +47,6 @@ def extract_plddt(pdb, pdb_file, chainid, offset=None):
     return df
 
 def extract_dssp(pdb_name, pdb_path, chain, offset=False):
-    # Secondary structure mapping
     SS_MAP = {
         'H': 'H',
         'B': 'C',
@@ -301,9 +297,9 @@ def extract_PALB2_features():
     
 def main():
     extract_BRCA1_features()
-#    extract_BRCA2_features()
-#    extract_RAD51C_features()
-#    extract_PALB2_features()
+    extract_BRCA2_features()
+    extract_RAD51C_features()
+    extract_PALB2_features()
     
 
 if __name__ == "__main__":

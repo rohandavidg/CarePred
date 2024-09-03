@@ -1,12 +1,5 @@
-#!/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/python_virtual/bin/python
-
-
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
-#from pdbecif.mmcif_io import CifFileReader
-#from pdbecif.mmcif_tools import MMCIF2Dict
-#import metapredict as meta
-#from pysam import FastaFile
 import pandas as pd
 import random
 from tqdm import tqdm
@@ -23,10 +16,6 @@ warnings.filterwarnings("ignore", category=pd.errors.PerformanceWarning)
 from Bio.PDB import PDBList
 import os
 import seaborn as sns
-#from Bio.SubsMat.MatrixInfo import blosum100
-#from Bio.PDB.HSExposure import HSExposureCA
-#from pynvml import *
-#import py3nvml
 
 class get_seq(object):
     def __init__(self, seq, ref, alt, index):
@@ -408,9 +397,7 @@ if __name__ ==  '__main__':
     parser.add_argument('-c', dest='chain',
                         help="chain in the pdb", required=True)    
     args = parser.parse_args()
-#    BRCA1_AF2_complete = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis/BRCA1/AlphaFold/AF-P38398-F1-model_v4.pdb"
-    FOLDX_LOCATION = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis/tools/foldx_20241231"
-    FOLDX_BINARY = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis/tools/foldx_20241231"
+    FOLDX_BINARY = "Location to installed Foldx"
     os.environ['FOLDX_BINARY'] = FOLDX_BINARY
     gene_seq, aa_pos = extract_fa_from_pdb(args.pdbpath, args.chain)
 #    print(gene_seq, aa_pos)

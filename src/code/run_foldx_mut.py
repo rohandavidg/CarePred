@@ -1,11 +1,6 @@
-#!/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/python_virtual/bin/python
-
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
-#from pdbecif.mmcif_io import CifFileReader
-#from pdbecif.mmcif_tools import MMCIF2Dict
-#import metapredict as meta
-#from pysam import FastaFile
+
 import pandas as pd
 import random
 from tqdm import tqdm
@@ -79,11 +74,8 @@ if __name__ ==  '__main__':
     parser.add_argument('-of', dest='offset',
                         help="integer to shift pos")        
     args = parser.parse_args()
-    FOLDX_LOCATION = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis/tools/foldx_20241231"
-    FOLDX_BINARY = "/research/bsi/projects/PI/tertiary/Couch_Fergus_coucf/s123456.general_utility/processing/thesis/tools/foldx_20241231"
+    FOLDX_BINARY = "location to installed foldx"
     os.environ['FOLDX_BINARY'] = FOLDX_BINARY
     mut_list =  create_list(args.mut_file, args.offset)
-#    print(mut_list)
     run_foldx(mut_list, args.pdbpath, args.pdb_name, args.chain, args.outfile)
-    #main()
     
