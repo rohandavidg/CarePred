@@ -13,7 +13,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
 from pdbecif.mmcif_io import CifFileReader
 from pdbecif.mmcif_tools import MMCIF2Dict
-#import metapredict as meta
 from pysam import FastaFile
 from scipy.stats import mannwhitneyu
 import random
@@ -82,8 +81,6 @@ from sklearn.preprocessing import MinMaxScaler
 import ddg_constants
 import dbnsfp_constants
 
-
-#PATH TO DATA
 BRCA1_functional_data = ddg_constants.BRCA1_functional_data
 BRCA2_functional_data = ddg_constants.BRCA2_function
 PALB2_functional_data = ddg_constants.PALB2_function
@@ -259,18 +256,6 @@ def BRCA1_ddg_results():
                                                         'AF2_subunit', "BRCA1", 1648)
     BRCA1_1JNX_truth_ddg_df  = ddg_constants.BRCA1_1JNX_truth_ddg
 
-#    BRCA1_7LYB_foldx_crystal_subunit_df  = parse_foldx_df(ddg_constants.BRCA1_7LYB_foldx_crystal_subunit,
-#                                                          '7LYB', 'crystal_subunit', 'BRCA1')
-#    BRCA1_7LYB_foldx_alphafold_subunit_df  = parse_foldx_df(ddg_constants.BRCA1_7LYB_foldx_alphafold_subunit, '7LYB',
-#                                                            'AF2_subunit', 'BRCA1', 3)
-#    BRCA1_7LYB_ddgun_crystal_subunit_df  = parse_ddgun3d_df(ddg_constants.BRCA1_7LYB_ddgun_crystal_subunit, '7LYB', 
-#                                                            'crystal_subunit', 'BRCA1')
-#    BRCA1_7LYB_ddgun_alphafold_subunit_df  = parse_ddgun3d_df(ddg_constants.BRCA1_7LYB_ddgun_alphafold_subunit, '7LYB',
-#                                                         'AF2_subunit', 3)
-#    BRCA1_7LYB_rosetta_crystal_subunit_df  = parse_rosetta_df(ddg_constants.BRCA1_7LYB_rosetta_crystal_subunit, '7LYB',
-#                                                              'crystal_subunit', "BRCA1")
-#    BRCA1_7LYB_rosetta_alphafold_subunit_df = parse_rosetta_df(ddg_constants.BRCA1_7LYB_rosetta_alphafold_subunit, '7LYB',
-#                                                               'AF2_subunit',"BRCA1", 3)
     BRCA1_7LYB_rosetta_alphafold_complex_df = parse_rosetta_df(ddg_constants.BRCA1_7LYB_rosetta_alphafold_complex, '7LYB',
                                                                'AF2_complex',"BRCA1", 3)    
     BRCA1_7LYB_foldx_crystal_complex_df  = parse_foldx_df(ddg_constants.BRCA1_7LYB_foldx_crystal_complex,'7LYB',
@@ -307,6 +292,20 @@ def BRCA1_ddg_results():
                                                              'crystal_complex', 'BRCA1')
     BRCA1_4OFB_rosetta_alphafold_complex_df = parse_rosetta_df(ddg_constants.BRCA1_4OFB_rosetta_alphafold_complex, '4OFB',
                                                                'AF2_complex', 'BRCA1', 1648)
+    
+    BRCA1_1T15_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.BRCA1_1T15_foldx_crystal_complex, '1T15',
+                                                         'crystal_complex', 'BRCA1')
+    BRCA1_1T15_foldx_alphafold_complex_df = parse_foldx_df(ddg_constants.BRCA1_1T15_foldx_alphafold_complex, '1T15',
+                                                           'AF2_complex', 'BRCA1', 1648)
+    BRCA1_1T15_ddgun_crystal_complex_df = parse_ddgun3d_df( ddg_constants.BRCA1_1T15_ddgun_crystal_complex, '1T15',
+                                                            'crystal_complex', 'BRCA1')
+    BRCA1_1T15_ddgun_alphafold_complex_df = parse_ddgun3d_df(ddg_constants.BRCA1_1T15_ddgun_alphafold_complex, '1T15',
+                                                             'AF2_complex', 'BRCA1', 1648)
+    BRCA1_1T15_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.BRCA1_1T15_rosetta_crystal_complex, '1T15',
+                                                             'crystal_complex', 'BRCA1')
+    BRCA1_1T15_rosetta_alphafold_complex_df = parse_rosetta_df(ddg_constants.BRCA1_1T15_rosetta_alphafold_complex, '1T15',
+                                                               'AF2_complex', 'BRCA1', 1648)
+
     BRCA1_ddg_df = pd.concat([BRCA1_1JNX_foldx_crystal_df,
                               BRCA1_1JNX_foldx_alphafold_df,
                               BRCA1_1JNX_ddgun_alphafold_df,
@@ -324,77 +323,71 @@ def BRCA1_ddg_results():
                               BRCA1_4OFB_ddgun_crystal_complex_df,
                               BRCA1_4OFB_ddgun_alphafold_complex_df,
                               BRCA1_4OFB_rosetta_crystal_complex_df,
-                              BRCA1_4OFB_rosetta_alphafold_complex_df], axis=0)
+                              BRCA1_4OFB_rosetta_alphafold_complex_df,
+                              BRCA1_1T15_foldx_crystal_complex_df,
+                              BRCA1_1T15_foldx_alphafold_complex_df,
+                              BRCA1_1T15_ddgun_crystal_complex_df,
+                              BRCA1_1T15_ddgun_alphafold_complex_df,
+                              BRCA1_1T15_rosetta_crystal_complex_df,
+                              BRCA1_1T15_rosetta_alphafold_complex_df], axis=0)
     BRCA1_ddg_df = BRCA1_ddg_df.reset_index(drop=True)
     return BRCA1_ddg_df
 
 def BRCA2_ddg_results():
-    BRCA2_1MJE_foldx_crystal_subunit_df = parse_foldx_df(ddg_constants.BRCA2_1MJE_foldx_crystal_subunit,'1MJE', 'crystal_subunit', 'BRCA2')
-    BRCA2_1MJE_foldx_AF2_subunit_df = parse_foldx_df(ddg_constants.BRCA2_1MJE_foldx_alphafold_subunit, '1MJE', 'AF2_subunit', 'BRCA2',
-                                                     2398)
-    BRCA2_1MJE_ddgun_crystal_subunit_df = parse_ddgun3d_df(ddg_constants.BRCA2_1MJE_ddgun_crystal_subunit, '1MJE', "crystal_subunit",
-                                                           'BRCA2')
-    BRCA2_1MJE_ddgun_AF2_subunit_df = parse_ddgun3d_df(ddg_constants.BRCA2_1MJE_ddgun_alphafold_subunit, '1MJE', "AF2_subunit",
-                                                       'BRCA2', 2398)
-    BRCA2_1MJE_rosetta_crystal_subunit_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_crystal_subunit, '1MJE', 'crystal_subunit', 'BRCA2')
-    BRCA2_1MJE_rosetta_AF2_subunit_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_alphafold_subunit, '1MJE', 'AF2_subunit',
-                                                         'BRCA2', 2398)
     BRCA2_1MJE_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.BRCA2_1MJE_foldx_crystal_complex,'1MJE', 'crystal_complex', 'BRCA2')
-    BRCA2_1MJE_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.BRCA2_1MJE_foldx_alphafold_complex, '1MJE', 'AF2_complex', 'BRCA2',
-                                                     2398)
-    BRCA2_1MJE_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.BRCA2_1MJE_ddgun_crystal_complex, '1MJE', "crystal_complex",
-                                                           'BRCA2')
+    BRCA2_1MJE_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.BRCA2_1MJE_foldx_alphafold_complex, '1MJE', 'AF2_complex', 'BRCA2',2398)
+    BRCA2_1MJE_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.BRCA2_1MJE_ddgun_crystal_complex, '1MJE',
+                                                           "crystal_complex",'BRCA2')
     BRCA2_1MJE_ddgun_AF2_complex_df = parse_ddgun3d_df(ddg_constants.BRCA2_1MJE_ddgun_alphafold_complex, '1MJE',
                                                        "AF2_complex",'BRCA2', 2398)
-    BRCA2_1MJE_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_crystal_complex, '1MJE', 'crystal_complex', 'BRCA2')
-    BRCA2_1MJE_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_alphafold_complex, '1MJE', 'AF2_complex',
-                                                         'BRCA2', 2398)    
-    BRCA2_ddg_df = pd.concat([BRCA2_1MJE_foldx_crystal_subunit_df, BRCA2_1MJE_foldx_AF2_subunit_df,
-                              BRCA2_1MJE_ddgun_crystal_subunit_df, BRCA2_1MJE_ddgun_AF2_subunit_df,
-                              BRCA2_1MJE_rosetta_crystal_subunit_df, BRCA2_1MJE_rosetta_AF2_subunit_df,
-                              BRCA2_1MJE_foldx_crystal_complex_df, BRCA2_1MJE_foldx_AF2_complex_df,
+    BRCA2_1MJE_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_crystal_complex, '1MJE',
+                                                             'crystal_complex', 'BRCA2')
+    BRCA2_1MJE_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.BRCA2_1MJE_rosetta_alphafold_complex, '1MJE',
+                                                         'AF2_complex','BRCA2', 2398)    
+    BRCA2_ddg_df = pd.concat([BRCA2_1MJE_foldx_crystal_complex_df, BRCA2_1MJE_foldx_AF2_complex_df,
                               BRCA2_1MJE_ddgun_crystal_complex_df, BRCA2_1MJE_ddgun_AF2_complex_df,
                               BRCA2_1MJE_rosetta_crystal_complex_df, BRCA2_1MJE_rosetta_AF2_complex_df], axis=0)
     BRCA2_ddg_df = BRCA2_ddg_df.reset_index(drop=True)
     return BRCA2_ddg_df
 
 def RAD51C_ddg_results():
-#    RAD51C_8FAZ_foldx_crystal_subunit_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_crystal_subunit,'8FAZ', 'crystal_subunit', 'RAD51C')
-#    RAD51C_8FAZ_foldx_AF2_subunit_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_alphafold_subunit, '8FAZ', 'AF2_subunit', 'RAD51C',
-#                                                      9)
-#    RAD51C_8FAZ_ddgun_crystal_subunit_df = parse_ddgun3d_df(ddg_constants.RAD51C_8FAZ_ddgun_crystal_subunit, '8FAZ', "crystal_subunit",
-#                                                           'RAD51C')
-#    RAD51C_8FAZ_ddgun_AF2_subunit_df = parse_ddgun3d_df(ddg_constants.RAD51C_8FAZ_ddgun_alphafold_subunit, '8FAZ', "AF2_subunit",
-#                                                        'RAD51C', 9)
-#    RAD51C_8FAZ_rosetta_crystal_subunit_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_crystal_subunit, '8FAZ', 'crystal_subunit', 'RAD51C')
-#    RAD51C_8FAZ_rosetta_AF2_subunit_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_alphafold_subunit, '8FAZ', 'AF2_subunit',
-#                                                          'RAD51C', 9)
-    RAD51C_8FAZ_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_crystal_complex,'8FAZ', 'crystal_complex', 'RAD51C')
-    RAD51C_8FAZ_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_alphafold_complex, '8FAZ', 'AF2_complex', 'RAD51C',
-                                                      9)
-    RAD51C_8FAZ_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.RAD51C_8FAZ_ddgun_crystal_complex, '8FAZ', "crystal_complex",
-                                                           'RAD51C')
+    RAD51C_8FAZ_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_crystal_complex,'8FAZ',
+                                                          'crystal_complex', 'RAD51C')
+    RAD51C_8FAZ_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.RAD51C_8FAZ_foldx_alphafold_complex, '8FAZ',
+                                                      'AF2_complex', 'RAD51C',9)
+    RAD51C_8FAZ_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.RAD51C_8FAZ_ddgun_crystal_complex, '8FAZ',
+                                                            "crystal_complex",'RAD51C')
     RAD51C_8FAZ_ddgun_AF2_complex_df = parse_ddgun3d_df(ddg_constants.RAD51C_8FAZ_ddgun_alphafold_complex, '8FAZ',
                                                         "AF2_complex",'RAD51C', 9)
-    RAD51C_8FAZ_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_crystal_complex, '8FAZ', 'crystal_complex', 'RAD51C')
-    RAD51C_8FAZ_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_alphafold_complex, '8FAZ', 'AF2_complex',
-                                                          'RAD51C', 9)    
+    RAD51C_8FAZ_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_crystal_complex, '8FAZ',
+                                                              'crystal_complex', 'RAD51C')
+    RAD51C_8FAZ_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8FAZ_rosetta_alphafold_complex, '8FAZ',
+                                                          'AF2_complex','RAD51C', 9)
+
+    RAD51C_8OUZ_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.RAD51C_8OUZ_foldx_crystal_complex,
+                                                          '8OUZ','crystal_complex', 'RAD51C')
+    RAD51C_8OUZ_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.RAD51C_8OUZ_foldx_alphafold_complex,
+                                                      '8OUZ', 'AF2_complex', 'RAD51C',10)
+    RAD51C_8OUZ_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.RAD51C_8OUZ_ddgun_crystal_complex,
+                                                            '8OUZ', "crystal_complex",
+                                                           'RAD51C')
+    RAD51C_8OUZ_ddgun_AF2_complex_df = parse_ddgun3d_df(ddg_constants.RAD51C_8OUZ_ddgun_alphafold_complex,
+                                                        '8OUZ', "AF2_complex",'RAD51C', 10)
+    RAD51C_8OUZ_rosetta_crystal_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8OUZ_rosetta_crystal_complex,
+                                                              '8OUZ', 'crystal_complex', 'RAD51C')
+    RAD51C_8OUZ_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.RAD51C_8OUZ_rosetta_alphafold_complex,
+                                                          '8OUZ','AF2_complex', 'RAD51C', 10)
     RAD51C_ddg_df = pd.concat([RAD51C_8FAZ_foldx_crystal_complex_df, RAD51C_8FAZ_foldx_AF2_complex_df,
                               RAD51C_8FAZ_ddgun_crystal_complex_df, RAD51C_8FAZ_ddgun_AF2_complex_df,
-                              RAD51C_8FAZ_rosetta_crystal_complex_df, RAD51C_8FAZ_rosetta_AF2_complex_df], axis=0)
+                               RAD51C_8FAZ_rosetta_crystal_complex_df, RAD51C_8FAZ_rosetta_AF2_complex_df,
+                               RAD51C_8OUZ_foldx_crystal_complex_df, RAD51C_8OUZ_foldx_AF2_complex_df,
+                              RAD51C_8OUZ_ddgun_crystal_complex_df, RAD51C_8OUZ_ddgun_AF2_complex_df,
+                               RAD51C_8OUZ_rosetta_crystal_complex_df, RAD51C_8OUZ_rosetta_AF2_complex_df], axis=0)
     RAD51C_ddg_df = RAD51C_ddg_df.reset_index(drop=True)
     return RAD51C_ddg_df
 
 
 def PALB2_ddg_results():
-#    PALB2_3EU7_foldx_crystal_subunit_df = parse_foldx_df(ddg_constants.PALB2_3EU7_foldx_crystal_subunit,'3EU7', 'crystal_subunit', 'PALB2')
-#    PALB2_3EU7_foldx_AF2_subunit_df = parse_foldx_df(ddg_constants.PALB2_3EU7_foldx_alphafold_subunit, '3EU7', 'AF2_subunit', 'PALB2',
-#                                                      853)
-#    PALB2_3EU7_ddgun_crystal_subunit_df = parse_ddgun3d_df(ddg_constants.PALB2_3EU7_ddgun_crystal_subunit, '3EU7', "crystal_subunit",
-#                                                           'PALB2')
-#    PALB2_3EU7_ddgun_AF2_subunit_df = parse_ddgun3d_df(ddg_constants.PALB2_3EU7_ddgun_alphafold_subunit, '3EU7', "AF2_subunit",'PALB2', 853)
-#    PALB2_3EU7_rosetta_crystal_subunit_df = parse_rosetta_df(ddg_constants.PALB2_3EU7_rosetta_crystal_subunit, '3EU7', 'crystal_subunit', 'PALB2')
-#    PALB2_3EU7_rosetta_AF2_subunit_df = parse_rosetta_df(ddg_constants.PALB2_3EU7_rosetta_alphafold_subunit, '3EU7', 'AF2_subunit', 'PALB2', 853)
     PALB2_3EU7_foldx_crystal_complex_df = parse_foldx_df(ddg_constants.PALB2_3EU7_foldx_crystal_complex, '3EU7', 'crystal_complex', 'PALB2')
     PALB2_3EU7_foldx_AF2_complex_df = parse_foldx_df(ddg_constants.PALB2_3EU7_foldx_alphafold_complex, '3EU7', 'AF2_complex', 'PALB2', 853)
     PALB2_3EU7_ddgun_crystal_complex_df = parse_ddgun3d_df(ddg_constants.PALB2_3EU7_ddgun_crystal_complex, '3EU7', "crystal_complex", 'PALB2')
@@ -403,7 +396,6 @@ def PALB2_ddg_results():
     PALB2_3EU7_rosetta_AF2_complex_df = parse_rosetta_df(ddg_constants.PALB2_3EU7_rosetta_alphafold_complex, '3EU7', 'AF2_complex', 'PALB2', 853)
     PALB2_2W18_foldx_crystal_subunit_df = parse_foldx_df(ddg_constants.PALB2_2W18_foldx_crystal_subunit,'2W18', 'crystal_subunit', 'PALB2')
     PALB2_2W18_foldx_AF2_subunit_df = parse_foldx_df(ddg_constants.PALB2_2W18_foldx_alphafold_subunit, '2W18', 'AF2_subunit', 'PALB2')
-#    print(PALB2_2W18_foldx_AF2_subunit_df[PALB2_2W18_foldx_AF2_subunit_df['mutations'] == 'Y910G'])
     PALB2_2W18_ddgun_crystal_subunit_df = parse_ddgun3d_df(ddg_constants.PALB2_2W18_ddgun_crystal_subunit, '2W18', "crystal_subunit", 'PALB2')
     PALB2_2W18_ddgun_AF2_subunit_df = parse_ddgun3d_df(ddg_constants.PALB2_2W18_ddgun_alphafold_subunit, '2W18', "AF2_subunit",'PALB2', 853)
     PALB2_2W18_rosetta_crystal_subunit_df = parse_rosetta_df(ddg_constants.PALB2_2W18_rosetta_crystal_subunit, '2W18', 'crystal_subunit', 'PALB2')

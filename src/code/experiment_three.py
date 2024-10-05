@@ -87,11 +87,7 @@ def explode_df(df):
     grouped_df = df.groupby(['GENE', 'model', 'predictor'])
     grouped_df_size = grouped_df.size()
     wide_df = grouped_df.apply(lambda x: x.pivot(index=None, columns=['method','mutations'], values='ddg'))
-    #wide_df.reset_index(drop=True, inplace=True)
-    
-    #wide_df = pd.merge(wide_df, grouped_df_size, how='left', on=['model', 'dtype', 'predictor'])
-    #wide_df.rename(columns={0: 'mutations_count'}, inplace=True)
-    print(wide_df.columns)
+
 
 def preprocess_dbNSFP(dbNSFP_data, gene, transcript):
     map_class_dict = {"unknown" : 'VUS',
@@ -129,13 +125,9 @@ def preprocess_dbNSFP(dbNSFP_data, gene, transcript):
     
 
     columns_to_fillna = is_rankscore_column
-#    dbNSFP_req_df[columns_to_fillna] = dbNSFP_req_df[columns_to_fillna].fillna(0)
-
     dbNSFP_req_df['clinvar_clnsig'] = dbNSFP_req_df['clinvar_clnsig'].fillna('unknown')
     dbNSFP_req_df['ClinVar_Class'] = dbNSFP_req_df['clinvar_clnsig'].map(map_class_dict)
     dbNSFP_req_df = dbNSFP_req_df.drop_duplicates().reset_index(drop=True)
- #   dbNSFP_req_df = dbNSFP_req_df[['mutations', 'ClinVar_Class']]
-#    dbNSFP_req_df = dbNSFP_req_df[(dbNSFP_req_df['ClinVar_Class'] == "Abnormal") | (dbNSFP_req_df['ClinVar_Class'] == "Normal")]
     dbNSFP_req_df = dbNSFP_req_df.drop_duplicates()
     dbNSFP_req_df = dbNSFP_req_df.reset_index(drop=True)
     return dbNSFP_req_df
@@ -150,17 +142,13 @@ def main():
     BRCA1_function_df =  parse_BRCA1_function(BRCA1_functional_data)
     BRCA1_data_function_df = pd.merge(BRCA1_data_df, BRCA1_function_df, on='mutations', how='left')
     BRCA1_dbNSFP_df.to_csv('BRCA1_dbNSFP_data.csv', index=None)
-#    BRCA1_data_function_df = pd.merge(BRCA1_dbNSFP_df,BRCA1_data_function_df, on='mutations', how='left')
     BRCA1_data_function_df.to_csv("BRCA1_dbNSFP_function_data.csv",index=None)
     
     BRCA2_dbNSFP_df = preprocess_dbNSFP(BRCA2_dbnsfp_data, 'BRCA2', BRCA2_transcript)
     BRCA2_data_df = BRCA2_ddg_results()
-    print(BRCA2_data_df)
     BRCA2_function_df =  parse_BRCA2_function(BRCA2_functional_data)
     BRCA2_data_function_df = pd.merge(BRCA2_data_df, BRCA2_function_df, on='mutations', how='left')
-    print(BRCA2_data_function_df)
     BRCA2_dbNSFP_df.to_csv('BRCA2_dbNSFP_data.csv', index=None)
-#    BRCA2_data_function_df = pd.merge(BRCA2_dbNSFP_df, BRCA2_data_function_df, on='mutations', how='left')
     BRCA2_data_function_df.to_csv("BRCA2_dbNSFP_function_data.csv",index=None)
     
     PALB2_dbNSFP_df = preprocess_dbNSFP(PALB2_dbnsfp_data, 'PALB2', PALB2_transcript)
@@ -168,7 +156,6 @@ def main():
     PALB2_function_df =  parse_PALB2_function(PALB2_functional_data)
     PALB2_data_function_df = pd.merge(PALB2_data_df, PALB2_function_df, on='mutations', how='left')
     PALB2_dbNSFP_df.to_csv('PALB2_dbNSFP_data.csv', index=None)
- #   PALB2_data_function_df = pd.merge(PALB2_dbNSFP_df, PALB2_data_function_df, on='mutations', how='left')
     PALB2_data_function_df.to_csv("PALB2_dbNSFP_function_data.csv",index=None)
     
     RAD51C_dbNSFP_df = preprocess_dbNSFP(RAD51C_dbnsfp_data, 'RAD51C', RAD51C_transcript)
@@ -176,7 +163,6 @@ def main():
     RAD51C_function_df =  parse_RAD51C_function(RAD51C_functional_data)
     RAD51C_data_function_df = pd.merge(RAD51C_data_df, RAD51C_function_df, on='mutations', how='left')
     RAD51C_dbNSFP_df.to_csv('RAD51C_dbNSFP_data.csv', index=None)
- #   RAD51C_data_function_df = pd.merge(RAD51C_dbNSFP_df, RAD51C_data_function_df, on='mutations', how='left')
     RAD51C_data_function_df.to_csv("RAD51C_dbNSFP_function_data.csv",index=None)
     
 if __name__ == "__main__":

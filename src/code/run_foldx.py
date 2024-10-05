@@ -101,9 +101,7 @@ def pdb_extract(reference, input_class_df, tmp_folder):
     ref_pLDDT = meta.predict_pLDDT(seq)
     batch_size=500
     cuda_available=torch.cuda.is_available()
-    print("cuda Available {0}".format(cuda_available))
     model = esm.pretrained.esmfold_v1().eval().cuda()
-    # Set the batch size for the model
     model = model.to(torch.device('cuda'), non_blocking=True)
     model.batch_size = batch_size
     model.set_chunk_size(128)
@@ -130,44 +128,6 @@ def pdb_extract(reference, input_class_df, tmp_folder):
             fout.write(f"{header}\n")
             fout.write(pdb_seq + '\n')
             
-        #if alt != 'X':
-        #    mut_disorder = meta.predict_disorder(mut_seq, normalized=True)
-        #    mut_pLDDT = meta.predict_pLDDT(mut_seq)
-        #    pdb_out = tmp_folder + '/pdb/' + mut + ".pdb"
-        #    if os.path.isfile(pdb_out):
-        #        pass
-        #    else:
-        #        with torch.no_grad():
-        #            output = model.infer_pdb(pdb_seq)
-        #            output = model.infer_pdb(mut_seq)
-            
-                #with open(pdb_out, "w") as f:
-                #    f.write(output)
-            
-            #struct = bsio.load_structure(pdb_out, extra_fields=["b_factor"])
-            #b_factor_mean = struct.b_factor.mean()
-            #list_index = index - 1
-            #variant_disorder_dict[mut] = {'ESMfold_b_factor': b_factor_mean,
-            #                                'mutant_disorder': mut_disorder[list_index],
-            #                                'reference_disorder': ref_disorder[list_index],
-            #                                'mutant_plddt': mut_pLDDT[list_index],
-            #                                'reference_plddt': ref_pLDDT[list_index]}
-            
-    
-        
-    #with open("mut_pos.tsv", 'w', newline='') as file:
-    #    writer = csv.writer(file)
-    #    writer.writerows(mut_list_pdb_seq)
-            
-    #variant_disorder_df = pd.DataFrame(variant_disorder_dict).T.reset_index()
-    #variant_disorder_df = variant_disorder_df.rename(columns={'index': 'mutations'})
-    #variant_disorder_df['Delta_disorder'] = variant_disorder_df['mutant_disorder'] - variant_disorder_df['reference_disorder']
-    #variant_disorder_df['Delta_plddt'] = variant_disorder_df['mutant_plddt'] - variant_disorder_df['reference_plddt']
-    #variant_disorder_df.to_csv("Diorder_features.csv", index=False)
-    #return variant_disorder_df
-
-
-
 def run_esmfold(sequence, outdir, name):
     model = esm.pretrained.esmfold_v1()
     model = model.eval().cuda()
@@ -282,7 +242,6 @@ def run_foldx(mut_list, ref_pdb_path, ref_pdb_name, chain, outname):
 def extract_fa_from_pdb(pdb, chainID):
     parser = PDBParser(QUIET=True)
     structure = parser.get_structure("struct", pdb)
-    print(chainID)
     three_to_one = {
         'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
         'CYS': 'C', 'GLU': 'E', 'GLN': 'Q', 'GLY': 'G',
@@ -330,10 +289,6 @@ def extract_dssp(pdb_name, pdb_path, index, class_type):
     cols_to_keep = ['Secondary_structure', 'Relative_ASA', 'NH–>O_1_energy',
                     'O–>NH_1_energy', 'NH–>O_2_energy', 'O–>NH_2_energy']
     dssp_df = dssp_df[cols_to_keep]
-    
-    #label_encoder = LabelEncoder()
-    #encoded_labels = label_encoder.fit_transform(dssp_df['Secondary_structure'].values.tolist())
-    #dssp_df['Secondary_structure_encoded'] = encoded_labels
     
     dssp_dict = dssp_df.to_dict(orient='records')
     updated_dict = []
@@ -400,11 +355,7 @@ if __name__ ==  '__main__':
     FOLDX_BINARY = "Location to installed Foldx"
     os.environ['FOLDX_BINARY'] = FOLDX_BINARY
     gene_seq, aa_pos = extract_fa_from_pdb(args.pdbpath, args.chain)
-#    print(gene_seq, aa_pos)
     gene_all_possible_mut_list = all_possible_list(gene_seq, aa_pos)
     small_mut_list = split_up_list(gene_all_possible_mut_list,args.part)
-    print(small_mut_list)
-    print(args.pdbpath)
-    print(args.pdb_name)
     run_foldx(small_mut_list, args.pdbpath, args.pdb_name, args.chain, args.outfile)
 #    main()

@@ -92,7 +92,6 @@ def run_ddg(pdb_file, positions, target_chain):
     reference_pose = mutate_residue(pose, i, reference_aa, 8.0, sfxn, residue_id)
     native_score = sfxn.score(reference_pose)
     amino_acids = [ 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y' ]
-    # Initialize an empty dictionary to store the data
     ddG_dict = {}
     for aa in amino_acids:
         mutatnt_ddG = mutate_residue(reference_pose, i, aa, 8.0, sfxn, residue_id)

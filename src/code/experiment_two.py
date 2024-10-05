@@ -12,6 +12,7 @@ import biographs as bg
 from collections import defaultdict
 
 
+
 def three_to_one(aa_three):
     amino_acids = {
         'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D',
@@ -135,7 +136,6 @@ def compute_local_distance(pdb1, pdb2, chain1, chain2, group, offset=None):
     return out_df
 
 def calculate_AA_distance(structure1_path, structure2_path, chain):
-    # Parse the PDB files
     parser = PDBParser(QUIET=True)
     structure1 = parser.get_structure('structure1', structure1_path)
     structure2 = parser.get_structure('structure2', structure2_path)
@@ -153,7 +153,7 @@ def calculate_AA_distance(structure1_path, structure2_path, chain):
                     structure_dict[key].append(tup_atom)
     superimposer = Superimposer()
     superimposer.set_atoms(atoms1, atoms2)
-    superimposer.apply(structure2.get_atoms())  # Apply the transformation to structure2
+    superimposer.apply(structure2.get_atoms())
 
     aa_distance_dict = {}
     for k, v in structure_dict.items():
@@ -187,6 +187,25 @@ def extract_BRCA1_features():
     BRCA1_4OFB_plddt_local_residue_df['GENE'] = "BRCA1"
     BRCA1_4OFB_plddt_local_residue_df.to_csv('BRCA1_4OFB_plddt_distance.csv', sep='\t', index=None)
 
+    BRCA1_1T15_crystal_complex = pdb_constants.BRCA1_1T15_pdb
+    BRCA1_1T15_AF2_complex = pdb_constants.BRCA1_1T15_AF_pdb1
+    BRCA1_1T15_plddt_df = extract_plddt('1T15', BRCA1_1T15_AF2_complex, 'A', 1648)
+    BRCA1_1T15_dssp_df = extract_dssp('1T15', BRCA1_1T15_AF2_complex, 'A')
+    BRCA1_1T15_plddt_df = BRCA1_1T15_plddt_df.merge(BRCA1_1T15_dssp_df, left_index=True, right_index=True)
+    BRCA1_1T15_local_distance_df = compute_local_distance(BRCA1_1T15_crystal_complex,
+                                                    BRCA1_1T15_AF2_complex,
+                                                    'A', 'A', '1T15', 1648)
+    BRCA1_1T15_per_residue_df = calculate_AA_distance(BRCA1_1T15_crystal_complex, BRCA1_1T15_AF2_complex, 'A')
+    BRCA1_1T15_plddt_residue_df = pd.merge(BRCA1_1T15_plddt_df, BRCA1_1T15_per_residue_df, on='REF_POS')
+    BRCA1_1T15_plddt_local_residue_df = pd.merge(BRCA1_1T15_plddt_residue_df,
+                                                 BRCA1_1T15_local_distance_df,
+                                                 on='REF_POS', how='outer')
+    BRCA1_1T15_plddt_local_residue_df = BRCA1_1T15_plddt_local_residue_df[~BRCA1_1T15_plddt_local_residue_df['PLDDT'].isna(\
+)]
+    BRCA1_1T15_plddt_local_residue_df['GENE'] = "BRCA1"
+    BRCA1_1T15_plddt_local_residue_df.to_csv('BRCA1_1T15_plddt_distance.csv', sep='\t', index=None)
+
+    
     BRCA1_7LYB_crystal_complex = pdb_constants.BRCA1_7LYB_pdb
     BRCA1_7LYB_AF2_complex = pdb_constants.BRCA1_7LYB_AF_pdb1
     BRCA1_7LYB_plddt_df = extract_plddt('7LYB', BRCA1_7LYB_AF2_complex, 'I', 3)
@@ -256,6 +275,24 @@ def extract_RAD51C_features():
     RAD51C_8FAZ_plddt_local_residue_df['GENE'] = 'RAD51C'    
     RAD51C_8FAZ_plddt_local_residue_df.to_csv('RAD51C_8FAZ_plddt_distance.csv', sep='\t', index=None)
 
+    RAD51C_8OUZ_crystal_complex = pdb_constants.RAD51C_8OUZ_pdb
+    RAD51C_8OUZ_AF2_complex = pdb_constants.RAD51C_8OUZ_AF_pdb1
+    RAD51C_8OUZ_plddt_df = extract_plddt('8OUZ', RAD51C_8OUZ_AF2_complex, 'B', 10)
+    RAD51C_8OUZ_dssp_df = extract_dssp('8OUZ', RAD51C_8OUZ_AF2_complex, 'B')
+    RAD51C_8OUZ_plddt_df = RAD51C_8OUZ_plddt_df.merge(RAD51C_8OUZ_dssp_df, left_index=True, right_index=True)
+    RAD51C_8OUZ_local_distance_df = compute_local_distance(RAD51C_8OUZ_crystal_complex,
+                                                          RAD51C_8OUZ_AF2_complex,
+                                                           'B', 'B', '8OUZ',10)
+    RAD51C_8OUZ_per_residue_df = calculate_AA_distance(RAD51C_8OUZ_crystal_complex,
+                                                       RAD51C_8OUZ_AF2_complex, 'B')
+    RAD51C_8OUZ_plddt_residue_df = pd.merge(RAD51C_8OUZ_plddt_df, RAD51C_8OUZ_per_residue_df, on='REF_POS')
+    RAD51C_8OUZ_plddt_local_residue_df = pd.merge(RAD51C_8OUZ_plddt_residue_df,
+                                                  RAD51C_8OUZ_local_distance_df,
+                                                 on='REF_POS', how='outer')
+    RAD51C_8OUZ_plddt_local_residue_df = RAD51C_8OUZ_plddt_local_residue_df[~RAD51C_8OUZ_plddt_local_residue_df['PLDDT'].isna()]
+    RAD51C_8OUZ_plddt_local_residue_df['GENE'] = 'RAD51C'
+    RAD51C_8OUZ_plddt_local_residue_df.to_csv('RAD51C_8OUZ_plddt_distance.csv', sep='\t', index=None)
+    
 def extract_PALB2_features():
     PALB2_3EU7_crystal_complex = pdb_constants.PALB2_3EU7_pdb
     PALB2_3EU7_AF2_complex = pdb_constants.PALB2_3EU7_AF2_pdb1
